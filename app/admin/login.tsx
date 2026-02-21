@@ -25,7 +25,6 @@ export default function AdminLoginScreen() {
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'mobile' | 'otp'>('mobile');
   const [loading, setLoading] = useState(false);
-  const [generatedOtp, setGeneratedOtp] = useState('');
 
   const handleSendOtp = async () => {
     if (!mobile.trim() || mobile.length !== 10) {
@@ -39,17 +38,14 @@ export default function AdminLoginScreen() {
       // First seed default admin if not exists (only first time)
       await seedDefaultAdmin('9262706867');
 
-      // Generate OTP and store in Firestore
-      const otpCode = await sendAdminOtp(mobile);
+      // Send OTP via Firebase Phone Auth (real SMS)
+      const success = await sendAdminOtp(mobile);
       
-      if (otpCode) {
-        setGeneratedOtp(otpCode);
+      if (success) {
         setStep('otp');
-        // In production, send OTP via SMS API (Twilio, MSG91, etc.)
-        // For now, showing OTP in alert for testing
-        Alert.alert('OTP Sent', `OTP has been sent to +91 ${mobile}\n\nYour OTP: ${otpCode}`);
+        Alert.alert('OTP Sent', `OTP has been sent via SMS to +91 ${mobile}`);
       } else {
-        Alert.alert('Error', 'Failed to send OTP. Please try again.');
+        Alert.alert('Error', 'Failed to send OTP. Please check the phone number and try again.');
       }
     } catch (error) {
       console.error('Error sending OTP:', error);
@@ -68,7 +64,7 @@ export default function AdminLoginScreen() {
     setLoading(true);
 
     try {
-      // Verify OTP from Firestore
+      // Verify OTP via Firebase Phone Auth
       const verifyResult = await verifyAdminOtp(mobile, otp);
 
       if (!verifyResult.success) {
@@ -77,7 +73,7 @@ export default function AdminLoginScreen() {
         return;
       }
 
-      // OTP verified! Now check if user is admin
+      // OTP verified! Now check if user is admin in Firestore
       const adminResult = await checkIsAdmin(mobile);
 
       if (adminResult.isAdmin) {
@@ -112,10 +108,9 @@ export default function AdminLoginScreen() {
   const handleResendOtp = async () => {
     setLoading(true);
     try {
-      const otpCode = await sendAdminOtp(mobile);
-      if (otpCode) {
-        setGeneratedOtp(otpCode);
-        Alert.alert('OTP Resent', `New OTP has been sent to +91 ${mobile}\n\nYour OTP: ${otpCode}`);
+      const success = await sendAdminOtp(mobile);
+      if (success) {
+        Alert.alert('OTP Resent', `New OTP has been sent via SMS to +91 ${mobile}`);
       } else {
         Alert.alert('Error', 'Failed to resend OTP. Please try again.');
       }

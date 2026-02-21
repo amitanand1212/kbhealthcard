@@ -14,11 +14,9 @@ import {
   subscribeToHealthCards,
   seedInitialData,
   checkAdminByMobile,
-  generateAndStoreOtp,
-  verifyStoredOtp,
   seedAdminUser,
-  firebaseSignOut,
 } from '../firebase/firebaseService';
+import { sendPhoneOtp, verifyPhoneOtp, phoneAuthSignOut } from '../firebase/phoneAuth';
 
 // Fallback local data
 import hospitalInfoLocal from '../data/hospitalInfo.json';
@@ -51,12 +49,10 @@ const useAppStore = create((set, get) => ({
   addCardRequest: async (request) => {
     const result = await fbAddCardRequest(request);
     if (result) {
-      set((state) => ({
-        cardRequests: [result, ...state.cardRequests],
-      }));
+      // Real-time listener (subscribeToCardRequests) will update state automatically
       return result;
     }
-    // Fallback: local-only add
+    // Fallback: local-only add (no Firestore listener will fire)
     const localRequest = { ...request, id: Date.now().toString(), status: 'pending' };
     set((state) => ({
       cardRequests: [localRequest, ...state.cardRequests],
@@ -89,12 +85,10 @@ const useAppStore = create((set, get) => ({
   addHealthCard: async (card) => {
     const result = await fbAddHealthCard(card);
     if (result) {
-      set((state) => ({
-        healthCards: [result, ...state.healthCards],
-      }));
+      // Real-time listener (subscribeToHealthCards) will update state automatically
       return result;
     }
-    // Fallback: local-only add
+    // Fallback: local-only add (no Firestore listener will fire)
     set((state) => ({
       healthCards: [card, ...state.healthCards],
     }));
@@ -106,18 +100,18 @@ const useAppStore = create((set, get) => ({
   adminUser: null,
   setAdminLogin: (user) => set({ isAdminLoggedIn: true, adminUser: user }),
   adminLogout: async () => {
-    await firebaseSignOut();
+    await phoneAuthSignOut();
     set({ isAdminLoggedIn: false, adminUser: null });
   },
 
-  // Admin OTP & Verification
+  // Admin OTP via Firebase Phone Auth (sends real SMS)
   sendAdminOtp: async (mobile) => {
-    const otp = await generateAndStoreOtp(mobile);
-    return otp;
+    const success = await sendPhoneOtp(mobile);
+    return success;
   },
 
   verifyAdminOtp: async (mobile, otp) => {
-    const result = await verifyStoredOtp(mobile, otp);
+    const result = await verifyPhoneOtp(otp);
     return result;
   },
 

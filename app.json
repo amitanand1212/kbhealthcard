@@ -29,10 +29,11 @@
       "bundler": "metro"
     },
     "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
       "expo-router",
       "expo-image-picker",
       "expo-document-picker",
-      "expo-screen-capture",
       [
         "expo-location",
         {
