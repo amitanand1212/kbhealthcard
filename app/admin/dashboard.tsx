@@ -7,6 +7,7 @@ import {
   ScrollView,
   Image,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -67,7 +68,7 @@ const RequestCard = ({ request, onApprove, onReject }: any) => (
 );
 
 export default function AdminDashboardScreen() {
-  const { cardRequests, healthCards, adminLogout, updateCardRequest } = useAppStore();
+  const { cardRequests, healthCards, adminLogout, updateCardRequest, refreshData, isRefreshing } = useAppStore();
   const hospitalInfo = useAppStore((state) => state.hospitalInfo);
 
   const pendingRequests = cardRequests.filter((r: any) => r.status === 'pending' || !r.status);
@@ -118,7 +119,11 @@ export default function AdminDashboardScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} colors={[COLORS.primary]} />
+        }
+      >
         {/* Blue Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleLogout} style={styles.settingsButton}>

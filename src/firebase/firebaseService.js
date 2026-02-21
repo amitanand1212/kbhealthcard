@@ -13,6 +13,8 @@ import {
   where,
   onSnapshot,
   serverTimestamp,
+  limit,
+  startAfter,
 } from 'firebase/firestore';
 import {
   ref,
@@ -194,6 +196,34 @@ export const getHealthCards = async () => {
   } catch (error) {
     console.error('Error fetching health cards:', error);
     return [];
+  }
+};
+
+// Paginated fetch – returns { cards, lastDoc } for infinite scroll
+export const getHealthCardsPaginated = async (pageSize = 10, lastDocSnapshot = null) => {
+  try {
+    let q;
+    if (lastDocSnapshot) {
+      q = query(
+        collection(db, COLLECTIONS.HEALTH_CARDS),
+        orderBy('createdAt', 'desc'),
+        startAfter(lastDocSnapshot),
+        limit(pageSize)
+      );
+    } else {
+      q = query(
+        collection(db, COLLECTIONS.HEALTH_CARDS),
+        orderBy('createdAt', 'desc'),
+        limit(pageSize)
+      );
+    }
+    const snapshot = await getDocs(q);
+    const cards = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const last = snapshot.docs[snapshot.docs.length - 1] || null;
+    return { cards, lastDoc: last };
+  } catch (error) {
+    console.error('Error fetching paginated health cards:', error);
+    return { cards: [], lastDoc: null };
   }
 };
 

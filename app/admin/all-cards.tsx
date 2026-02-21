@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   Image,
   Linking,
   Platform,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -18,6 +20,7 @@ import * as FileSystem from 'expo-file-system';
 import { COLORS, SIZES } from '../../src/constants';
 import { useAppStore } from '../../src/store';
 import { Alert } from '../../src/utils/alert';
+import { getHealthCardsPaginated } from '../../src/firebase/firebaseService';
 
 const CardItem = ({ card, onView, onPDF, onWhatsApp }: any) => (
   <View style={styles.cardItem}>
@@ -62,8 +65,56 @@ const CardItem = ({ card, onView, onPDF, onWhatsApp }: any) => (
 );
 
 export default function AllCardsScreen() {
-  const { healthCards } = useAppStore();
   const hospitalInfo = useAppStore((state) => state.hospitalInfo);
+
+  const PAGE_SIZE = 10;
+  const [cards, setCards] = useState<any[]>([]);
+  const [lastDoc, setLastDoc] = useState<any>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Initial load
+  useEffect(() => {
+    loadFirstPage();
+  }, []);
+
+  const loadFirstPage = async () => {
+    setLoading(true);
+    const result = await getHealthCardsPaginated(PAGE_SIZE, null);
+    setCards(result.cards);
+    setLastDoc(result.lastDoc);
+    setHasMore(result.cards.length === PAGE_SIZE);
+    setTotalCount(result.cards.length);
+    setLoading(false);
+  };
+
+  // Pull-to-refresh
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    const result = await getHealthCardsPaginated(PAGE_SIZE, null);
+    setCards(result.cards);
+    setLastDoc(result.lastDoc);
+    setHasMore(result.cards.length === PAGE_SIZE);
+    setTotalCount(result.cards.length);
+    setRefreshing(false);
+  }, []);
+
+  // Load next page
+  const loadMore = async () => {
+    if (loadingMore || !hasMore || !lastDoc) return;
+    setLoadingMore(true);
+    const result = await getHealthCardsPaginated(PAGE_SIZE, lastDoc);
+    if (result.cards.length > 0) {
+      setCards((prev) => [...prev, ...result.cards]);
+      setLastDoc(result.lastDoc);
+      setTotalCount((prev) => prev + result.cards.length);
+    }
+    setHasMore(result.cards.length === PAGE_SIZE);
+    setLoadingMore(false);
+  };
 
   const handleView = (card: any) => {
     router.push({ pathname: '/admin/card-preview', params: { cardId: card.id } });
@@ -225,39 +276,60 @@ _Issued by KB Memorial Hospital_`;
         </TouchableOpacity>
         <Text style={styles.headerTitle}>All Health Cards</Text>
         <View style={styles.countBadge}>
-          <Text style={styles.countText}>{healthCards.length}</Text>
+          <Text style={styles.countText}>{totalCount}</Text>
         </View>
       </View>
 
-      {/* Cards List */}
-      <FlatList
-        data={healthCards}
-        keyExtractor={(item: any) => item.id}
-        renderItem={({ item }) => (
-          <CardItem
-            card={item}
-            onView={handleView}
-            onPDF={handlePDF}
-            onWhatsApp={handleWhatsApp}
-          />
-        )}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons name="card-off" size={80} color={COLORS.textSecondary} />
-            <Text style={styles.emptyTitle}>No Cards Generated</Text>
-            <Text style={styles.emptyText}>Health cards will appear here once created</Text>
-            <TouchableOpacity
-              style={styles.createBtn}
-              onPress={() => router.push('/admin/create-card')}
-            >
-              <MaterialCommunityIcons name="plus" size={20} color={COLORS.white} />
-              <Text style={styles.createBtnText}>Create New Card</Text>
-            </TouchableOpacity>
-          </View>
-        }
-      />
+      {loading ? (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={{ marginTop: 12, color: COLORS.textSecondary }}>Loading cards...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={cards}
+          keyExtractor={(item: any) => item.id}
+          renderItem={({ item }) => (
+            <CardItem
+              card={item}
+              onView={handleView}
+              onPDF={handlePDF}
+              onWhatsApp={handleWhatsApp}
+            />
+          )}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.4}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[COLORS.primary]} />
+          }
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={styles.footerLoader}>
+                <ActivityIndicator size="small" color={COLORS.primary} />
+                <Text style={styles.footerText}>Loading more...</Text>
+              </View>
+            ) : !hasMore && cards.length > 0 ? (
+              <Text style={styles.footerText}>All cards loaded</Text>
+            ) : null
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <MaterialCommunityIcons name="card-off" size={80} color={COLORS.textSecondary} />
+              <Text style={styles.emptyTitle}>No Cards Generated</Text>
+              <Text style={styles.emptyText}>Health cards will appear here once created</Text>
+              <TouchableOpacity
+                style={styles.createBtn}
+                onPress={() => router.push('/admin/create-card')}
+              >
+                <MaterialCommunityIcons name="plus" size={20} color={COLORS.white} />
+                <Text style={styles.createBtnText}>Create New Card</Text>
+              </TouchableOpacity>
+            </View>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -431,6 +503,24 @@ const styles = StyleSheet.create({
   createBtnText: {
     color: COLORS.white,
     fontWeight: '600',
+    marginLeft: 8,
+  },
+  loaderContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  footerLoader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+  },
+  footerText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    paddingVertical: 12,
     marginLeft: 8,
   },
 });

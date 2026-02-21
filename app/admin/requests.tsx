@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { COLORS, SIZES } from '../../src/constants';
@@ -65,7 +65,7 @@ const RequestCard = ({ request, onApprove, onReject }) => {
 };
 
 export default function AdminRequestsScreen() {
-  const { cardRequests, updateRequestStatus } = useAppStore();
+  const { cardRequests, updateRequestStatus, refreshData, isRefreshing } = useAppStore();
 
   const handleApprove = (request) => {
     Alert.alert(
@@ -116,6 +116,9 @@ export default function AdminRequestsScreen() {
         )}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} colors={[COLORS.primary]} />
+        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <MaterialCommunityIcons name="file-document-outline" size={60} color={COLORS.textSecondary} />

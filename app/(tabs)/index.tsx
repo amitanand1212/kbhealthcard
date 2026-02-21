@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -24,6 +25,8 @@ const QuickAction = ({ icon, title, onPress, color = COLORS.primary }) => (
 
 export default function HomeTab() {
   const hospitalInfo = useAppStore((state) => state.hospitalInfo);
+  const refreshData = useAppStore((state) => state.refreshData);
+  const isRefreshing = useAppStore((state) => state.isRefreshing);
   const [pressCount, setPressCount] = useState(0);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -68,7 +71,11 @@ export default function HomeTab() {
       </View>
 
       {/* Quick Actions */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={refreshData} colors={[COLORS.primary]} />
+        }
+      >
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         
         <View style={styles.quickActionsGrid}>

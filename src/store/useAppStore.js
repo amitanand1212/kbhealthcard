@@ -10,8 +10,6 @@ import {
   updateCardRequestStatus as fbUpdateCardRequestStatus,
   updateCardRequest as fbUpdateCardRequest,
   addHealthCard as fbAddHealthCard,
-  subscribeToCardRequests,
-  subscribeToHealthCards,
   seedInitialData,
   checkAdminByMobile,
   seedAdminUser,
@@ -107,10 +105,13 @@ const useAppStore = create((set, get) => ({
   addHealthCard: async (card) => {
     const result = await fbAddHealthCard(card);
     if (result) {
-      // Real-time listener (subscribeToHealthCards) will update state automatically
+      // Add to local state immediately
+      set((state) => ({
+        healthCards: [{ ...card, id: result.id }, ...state.healthCards],
+      }));
       return result;
     }
-    // Fallback: local-only add (no Firestore listener will fire)
+    // Fallback: local-only add
     set((state) => ({
       healthCards: [card, ...state.healthCards],
     }));
@@ -128,19 +129,6 @@ const useAppStore = create((set, get) => ({
   // Admin login with email & password
   loginAdmin: async (email, password) => {
     const result = await adminLoginWithEmail(email, password);
-    if (result.success) {
-      // Only start real-time listeners when admin logs in (saves reads for normal users)
-      const { _unsubscribeRequests, _unsubscribeCards } = get();
-      if (!_unsubscribeRequests) {
-        const unsubRequests = subscribeToCardRequests((requests) => {
-          set({ cardRequests: requests });
-        });
-        const unsubCards = subscribeToHealthCards((cards) => {
-          set({ healthCards: cards });
-        });
-        set({ _unsubscribeRequests: unsubRequests, _unsubscribeCards: unsubCards });
-      }
-    }
     return result;
   },
 
@@ -175,13 +163,10 @@ const useAppStore = create((set, get) => ({
     return await seedAdminUser(mobile);
   },
 
-  // Loading State
+  // Loading & Refreshing State
   isLoading: false,
+  isRefreshing: false,
   setLoading: (loading) => set({ isLoading: loading }),
-
-  // Firebase real-time unsubscribe functions
-  _unsubscribeRequests: null,
-  _unsubscribeCards: null,
 
   // Initialize App Data — LOCAL-FIRST to minimize Firebase reads
   initializeData: async () => {
@@ -247,19 +232,7 @@ const useAppStore = create((set, get) => ({
     }
   },
 
-  // Start admin real-time listeners (call only when admin logs in)
-  startAdminListeners: () => {
-    const { _unsubscribeRequests, _unsubscribeCards } = get();
-    if (_unsubscribeRequests) return; // already active
-
-    const unsubRequests = subscribeToCardRequests((requests) => {
-      set({ cardRequests: requests });
-    });
-    const unsubCards = subscribeToHealthCards((cards) => {
-      set({ healthCards: cards });
-    });
-    set({ _unsubscribeRequests: unsubRequests, _unsubscribeCards: unsubCards });
-  },
+  // Start admin real-time listeners — REMOVED (use refreshData instead)
 
   // Load admin data on-demand (not on every app launch)
   loadAdminData: async () => {
@@ -274,12 +247,53 @@ const useAppStore = create((set, get) => ({
     }
   },
 
-  // Cleanup listeners
-  cleanup: () => {
-    const { _unsubscribeRequests, _unsubscribeCards } = get();
-    if (_unsubscribeRequests) _unsubscribeRequests();
-    if (_unsubscribeCards) _unsubscribeCards();
+  // Refresh all data from Firebase (call on pull-to-refresh)
+  refreshData: async () => {
+    set({ isRefreshing: true });
+    try {
+      const { isAdminLoggedIn } = get();
+
+      // Always refresh static data
+      const [fbHospitalInfo, fbDoctors, fbServices, fbBenefits] =
+        await Promise.all([
+          getHospitalInfo(),
+          getDoctors(),
+          getServices(),
+          getHealthCardBenefits(),
+        ]);
+
+      const localHospitalInfo = hospitalInfoLocal;
+      const localDoctors = doctorsLocal.doctors || doctorsLocal;
+      const localServices = servicesLocal.services || servicesLocal;
+      const localBenefits = healthCardBenefitsLocal;
+
+      const hospitalInfo = fbHospitalInfo || localHospitalInfo;
+      const doctors = fbDoctors.length > 0 ? fbDoctors : localDoctors;
+      const services = fbServices.length > 0 ? fbServices : localServices;
+      const healthCardBenefits = fbBenefits || localBenefits;
+
+      set({ hospitalInfo, doctors, services, healthCardBenefits });
+      await saveCache({ hospitalInfo, doctors, services, healthCardBenefits });
+
+      // If admin, also refresh card requests & health cards
+      if (isAdminLoggedIn) {
+        const [fbRequests, fbCards] = await Promise.all([
+          getCardRequests(),
+          getHealthCards(),
+        ]);
+        set({ cardRequests: fbRequests, healthCards: fbCards });
+      }
+
+      console.log('✅ Data refreshed from Firebase');
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      set({ isRefreshing: false });
+    }
   },
+
+  // Cleanup (no listeners to clean up anymore)
+  cleanup: () => {},
 }));
 
 export default useAppStore;
