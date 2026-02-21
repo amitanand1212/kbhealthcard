@@ -136,6 +136,15 @@ export default function HomeTab() {
       {/* Footer */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>© 2026 KB Memorial Hospital</Text>
+        <View style={styles.footerLinks}>
+          <TouchableOpacity onPress={() => router.push('/privacy-policy')}>
+            <Text style={styles.footerLink}>Privacy Policy</Text>
+          </TouchableOpacity>
+          <Text style={styles.footerDot}>•</Text>
+          <TouchableOpacity onPress={() => router.push('/terms-conditions')}>
+            <Text style={styles.footerLink}>Terms & Conditions</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -291,5 +300,20 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: SIZES.small,
     color: COLORS.textSecondary,
+  },
+  footerLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  footerLink: {
+    fontSize: 12,
+    color: COLORS.primary,
+    textDecorationLine: 'underline',
+  },
+  footerDot: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginHorizontal: 6,
   },
 });

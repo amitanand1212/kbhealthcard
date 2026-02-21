@@ -67,6 +67,8 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen name="contact" options={{ title: 'Contact & Location' }} />
+          <Stack.Screen name="privacy-policy" options={{ title: 'Privacy Policy' }} />
+          <Stack.Screen name="terms-conditions" options={{ title: 'Terms & Conditions' }} />
           <Stack.Screen
             name="admin/login"
             options={{
