@@ -29,7 +29,16 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-image-picker",
+      "expo-document-picker",
+      "expo-screen-capture",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow KB Memorial Hospital to access your location."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
