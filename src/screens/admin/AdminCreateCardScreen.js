@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SIZES } from '../../constants';
@@ -37,6 +38,7 @@ const AdminCreateCardScreen = ({ navigation, route }) => {
   });
 
   const [errors, setErrors] = useState({});
+  const [isCreating, setIsCreating] = useState(false);
 
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
   const genders = ['Male', 'Female', 'Other'];
@@ -66,15 +68,22 @@ const AdminCreateCardScreen = ({ navigation, route }) => {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Create',
-          onPress: () => {
-            addHealthCard({
-              ...formData,
-              id: Date.now().toString(),
-              createdAt: new Date().toISOString(),
-            });
-            Alert.alert('Success', 'Health card created successfully!', [
-              { text: 'OK', onPress: () => navigation.goBack() },
-            ]);
+          onPress: async () => {
+            setIsCreating(true);
+            try {
+              await addHealthCard({
+                ...formData,
+                id: Date.now().toString(),
+                createdAt: new Date().toISOString(),
+              });
+              setIsCreating(false);
+              Alert.alert('Success', 'Health card created successfully!', [
+                { text: 'OK', onPress: () => navigation.goBack() },
+              ]);
+            } catch (error) {
+              setIsCreating(false);
+              Alert.alert('Error', 'Failed to create health card. Please try again.');
+            }
           },
         },
       ]
@@ -235,9 +244,28 @@ const AdminCreateCardScreen = ({ navigation, route }) => {
           </View>
 
           {/* Save Button */}
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <MaterialCommunityIcons name="content-save" size={22} color={COLORS.white} />
-            <Text style={styles.saveButtonText}>Save Health Card</Text>
+          {isCreating && (
+            <View style={styles.creatingMessage}>
+              <ActivityIndicator size="small" color={COLORS.primary} />
+              <Text style={styles.creatingText}>Please wait, creating health card...</Text>
+            </View>
+          )}
+          <TouchableOpacity
+            style={[styles.saveButton, isCreating && styles.saveButtonDisabled]}
+            onPress={handleSave}
+            disabled={isCreating}
+          >
+            {isCreating ? (
+              <>
+                <ActivityIndicator size="small" color={COLORS.white} />
+                <Text style={styles.saveButtonText}>Creating...</Text>
+              </>
+            ) : (
+              <>
+                <MaterialCommunityIcons name="content-save" size={22} color={COLORS.white} />
+                <Text style={styles.saveButtonText}>Save Health Card</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -430,10 +458,29 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
+  saveButtonDisabled: {
+    backgroundColor: COLORS.textSecondary,
+    opacity: 0.7,
+  },
   saveButtonText: {
     fontSize: SIZES.h4,
     fontWeight: 'bold',
     color: COLORS.white,
+    marginLeft: 10,
+  },
+  creatingMessage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: COLORS.primary + '15',
+    borderRadius: SIZES.radius,
+  },
+  creatingText: {
+    fontSize: SIZES.body,
+    color: COLORS.primary,
+    fontWeight: '600',
     marginLeft: 10,
   },
 });

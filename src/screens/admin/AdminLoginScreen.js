@@ -9,41 +9,75 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS, SIZES } from '../../constants';
 import { useAppStore } from '../../store';
+import { registerAdminWithEmail } from '../../firebase/firebaseService';
 
 const AdminLoginScreen = ({ navigation }) => {
   const setAdminLogin = useAppStore((state) => state.setAdminLogin);
+  const loginAdmin = useAppStore((state) => state.loginAdmin);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
 
-  // For now, using static credentials (will be replaced with Firebase Auth later)
-  const ADMIN_EMAIL = 'admin@kbmemorial.com';
-  const ADMIN_PASSWORD = 'admin123';
-
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       Alert.alert('Error', 'Please enter email and password');
       return;
     }
 
     setLoading(true);
-
-    // Simulate login (replace with Firebase Auth)
-    setTimeout(() => {
-      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-        setAdminLogin({ email });
+    try {
+      const result = await loginAdmin(email.trim(), password);
+      if (result.success) {
+        setAdminLogin({ email: email.trim(), ...result.data });
         navigation.replace('AdminDashboard');
       } else {
-        Alert.alert('Error', 'Invalid email or password');
+        Alert.alert('Error', result.message);
       }
-      setLoading(false);
-    }, 1000);
+    } catch (error) {
+      Alert.alert('Error', 'Login failed. Please try again.');
+    }
+    setLoading(false);
+  };
+
+  const handleRegister = async () => {
+    if (!email.trim() || !password.trim() || !name.trim()) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    if (password.trim().length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await registerAdminWithEmail(email.trim(), password, name.trim());
+      if (result.success) {
+        Alert.alert(
+          'Registration Successful',
+          'Your account has been created. Please wait for admin approval before you can login.',
+          [{ text: 'OK', onPress: () => setIsRegisterMode(false) }]
+        );
+        setEmail('');
+        setPassword('');
+        setName('');
+      } else {
+        Alert.alert('Error', result.message);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Registration failed. Please try again.');
+    }
+    setLoading(false);
   };
 
   return (
@@ -61,11 +95,29 @@ const AdminLoginScreen = ({ navigation }) => {
           />
         </View>
 
-        <Text style={styles.title}>Admin Login</Text>
-        <Text style={styles.subtitle}>Access restricted to hospital staff only</Text>
+        <Text style={styles.title}>{isRegisterMode ? 'Admin Register' : 'Admin Login'}</Text>
+        <Text style={styles.subtitle}>
+          {isRegisterMode
+            ? 'Create your admin account (requires approval)'
+            : 'Access restricted to hospital staff only'}
+        </Text>
 
         {/* Form */}
         <View style={styles.form}>
+          {isRegisterMode && (
+            <View style={styles.inputContainer}>
+              <MaterialCommunityIcons name="account" size={20} color={COLORS.textSecondary} />
+              <TextInput
+                style={styles.input}
+                placeholder="Full Name"
+                placeholderTextColor={COLORS.textSecondary}
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
+              />
+            </View>
+          )}
+
           <View style={styles.inputContainer}>
             <MaterialCommunityIcons name="email" size={20} color={COLORS.textSecondary} />
             <TextInput
@@ -100,25 +152,56 @@ const AdminLoginScreen = ({ navigation }) => {
 
           <TouchableOpacity
             style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-            onPress={handleLogin}
+            onPress={isRegisterMode ? handleRegister : handleLogin}
             disabled={loading}
           >
             {loading ? (
-              <Text style={styles.loginButtonText}>Logging in...</Text>
+              <Text style={styles.loginButtonText}>
+                {isRegisterMode ? 'Registering...' : 'Logging in...'}
+              </Text>
             ) : (
               <>
-                <MaterialCommunityIcons name="login" size={20} color={COLORS.white} />
-                <Text style={styles.loginButtonText}>Login</Text>
+                <MaterialCommunityIcons
+                  name={isRegisterMode ? 'account-plus' : 'login'}
+                  size={20}
+                  color={COLORS.white}
+                />
+                <Text style={styles.loginButtonText}>
+                  {isRegisterMode ? 'Register' : 'Login'}
+                </Text>
               </>
             )}
           </TouchableOpacity>
         </View>
 
-        {/* Demo credentials hint */}
-        <View style={styles.demoHint}>
-          <Text style={styles.demoText}>Demo Credentials:</Text>
-          <Text style={styles.demoCredentials}>admin@kbmemorial.com / admin123</Text>
-        </View>
+        {/* Toggle Login/Register */}
+        <TouchableOpacity
+          style={styles.toggleContainer}
+          onPress={() => {
+            setIsRegisterMode(!isRegisterMode);
+            setEmail('');
+            setPassword('');
+            setName('');
+          }}
+        >
+          <Text style={styles.toggleText}>
+            {isRegisterMode
+              ? 'Already have an account? '
+              : "Don't have an account? "}
+            <Text style={styles.toggleLink}>
+              {isRegisterMode ? 'Login' : 'Register'}
+            </Text>
+          </Text>
+        </TouchableOpacity>
+
+        {isRegisterMode && (
+          <View style={styles.demoHint}>
+            <MaterialCommunityIcons name="information" size={18} color={COLORS.warning} />
+            <Text style={[styles.demoText, { marginLeft: 8, flex: 1 }]}>
+              After registration, your account needs to be approved by an existing admin before you can login.
+            </Text>
+          </View>
+        )}
       </View>
     </KeyboardAvoidingView>
   );
@@ -212,21 +295,35 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   demoHint: {
-    marginTop: 30,
+    marginTop: 16,
     padding: 16,
     backgroundColor: COLORS.warning + '20',
     borderRadius: SIZES.radius,
-    alignItems: 'center',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
   demoText: {
     fontSize: SIZES.small,
     color: COLORS.textSecondary,
+    lineHeight: 18,
   },
   demoCredentials: {
     fontSize: SIZES.small,
     color: COLORS.textPrimary,
     fontWeight: '600',
     marginTop: 4,
+  },
+  toggleContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  toggleText: {
+    fontSize: SIZES.body,
+    color: COLORS.textSecondary,
+  },
+  toggleLink: {
+    color: COLORS.primary,
+    fontWeight: '700',
   },
 });
 

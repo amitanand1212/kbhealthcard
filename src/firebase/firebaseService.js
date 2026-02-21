@@ -473,6 +473,29 @@ export const seedAdminWithEmail = async (email, password, name = 'Admin') => {
   }
 };
 
+// Register a new admin user with isAdmin = false (requires manual approval)
+export const registerAdminWithEmail = async (email, password, name = 'Admin') => {
+  try {
+    const docId = email.replace(/[.]/g, '_');
+    const docRef = doc(db, COLLECTIONS.ADMIN_USERS, docId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { success: false, message: 'An account with this email already exists.' };
+    }
+    await setDoc(docRef, {
+      email,
+      password,
+      name,
+      isAdmin: false,
+      createdAt: serverTimestamp(),
+    });
+    return { success: true, message: 'Registration successful! Please wait for admin approval.' };
+  } catch (error) {
+    console.error('Error registering admin:', error);
+    return { success: false, message: 'Registration failed. Please try again.' };
+  }
+};
+
 // Firebase Auth logout
 export const firebaseSignOut = async () => {
   try {
