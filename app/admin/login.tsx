@@ -18,112 +18,48 @@ import { useAppStore } from '../../src/store';
 import { Alert } from '../../src/utils/alert';
 
 export default function AdminLoginScreen() {
-  const { setAdminLogin, sendAdminOtp, verifyAdminOtp, checkIsAdmin, seedDefaultAdmin } = useAppStore();
+  const { setAdminLogin, loginAdmin, loadAdminData } = useAppStore();
   const hospitalInfo = useAppStore((state) => state.hospitalInfo);
 
-  const [mobile, setMobile] = useState('');
-  const [otp, setOtp] = useState('');
-  const [step, setStep] = useState<'mobile' | 'otp'>('mobile');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSendOtp = async () => {
-    if (!mobile.trim() || mobile.length !== 10) {
-      Alert.alert('Error', 'Please enter valid 10-digit mobile number');
+  const handleLogin = async () => {
+    if (!email.trim()) {
+      Alert.alert('Error', 'Please enter your email');
+      return;
+    }
+    if (!password.trim()) {
+      Alert.alert('Error', 'Please enter your password');
       return;
     }
 
     setLoading(true);
 
     try {
-      // First seed default admin if not exists (only first time)
-      await seedDefaultAdmin('9262706867');
+      const result = await loginAdmin(email.trim(), password);
 
-      // Send OTP via Firebase Phone Auth (real SMS)
-      const success = await sendAdminOtp(mobile);
-      
-      if (success) {
-        setStep('otp');
-        Alert.alert('OTP Sent', `OTP has been sent via SMS to +91 ${mobile}`);
+      if (result.success) {
+        setAdminLogin({
+          email: email.trim(),
+          name: result.data?.name || 'Admin',
+          isAdmin: true,
+        });
+        // Load admin-only data (card requests, health cards) on successful login
+        await loadAdminData();
+        Alert.alert('Success', `Welcome, ${result.data?.name || 'Admin'}!`);
+        router.replace('/(tabs)');
       } else {
-        Alert.alert('Error', 'Failed to send OTP. Please check the phone number and try again.');
+        Alert.alert('Access Denied', result.message || 'Invalid email or password.');
       }
     } catch (error) {
-      console.error('Error sending OTP:', error);
+      console.error('Error logging in:', error);
       Alert.alert('Error', 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleVerifyOtp = async () => {
-    if (!otp.trim() || otp.length !== 6) {
-      Alert.alert('Error', 'Please enter valid 6-digit OTP');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // Verify OTP via Firebase Phone Auth
-      const verifyResult = await verifyAdminOtp(mobile, otp);
-
-      if (!verifyResult.success) {
-        Alert.alert('Error', verifyResult.message);
-        setLoading(false);
-        return;
-      }
-
-      // OTP verified! Now check if user is admin in Firestore
-      const adminResult = await checkIsAdmin(mobile);
-
-      if (adminResult.isAdmin) {
-        // User is an admin - grant access
-        setAdminLogin({ 
-          mobile, 
-          name: adminResult.data?.name || 'Admin',
-          isAdmin: true 
-        });
-        Alert.alert('Success', `Welcome, ${adminResult.data?.name || 'Admin'}!`);
-        router.replace('/(tabs)');
-      } else {
-        // User is NOT an admin
-        Alert.alert(
-          'Access Denied', 
-          'You are not an admin. Only authorized administrators can access this panel.',
-          [{ text: 'OK', onPress: () => {
-            setStep('mobile');
-            setOtp('');
-            setMobile('');
-          }}]
-        );
-      }
-    } catch (error) {
-      console.error('Error verifying OTP:', error);
-      Alert.alert('Error', 'Verification failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendOtp = async () => {
-    setLoading(true);
-    try {
-      const success = await sendAdminOtp(mobile);
-      if (success) {
-        Alert.alert('OTP Resent', `New OTP has been sent via SMS to +91 ${mobile}`);
-      } else {
-        Alert.alert('Error', 'Failed to resend OTP. Please try again.');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to resend OTP.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBack = () => {
-    setStep('mobile');
-    setOtp('');
   };
 
   return (
@@ -151,83 +87,54 @@ export default function AdminLoginScreen() {
         <View style={styles.formCard}>
           <Text style={styles.formTitle}>Admin Login</Text>
 
-          {step === 'mobile' ? (
-            <>
-              {/* Mobile Number Input */}
-              <View style={styles.inputContainer}>
-                <MaterialCommunityIcons name="phone" size={20} color={COLORS.textSecondary} />
-                <Text style={styles.countryCode}>+91</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Mobile Number"
-                  placeholderTextColor={COLORS.textSecondary}
-                  value={mobile}
-                  onChangeText={(text) => setMobile(text.replace(/[^0-9]/g, ''))}
-                  keyboardType="phone-pad"
-                  maxLength={10}
-                />
-              </View>
+          {/* Email Input */}
+          <View style={styles.inputContainer}>
+            <MaterialCommunityIcons name="email-outline" size={20} color={COLORS.textSecondary} />
+            <TextInput
+              style={styles.input}
+              placeholder="Email Address"
+              placeholderTextColor={COLORS.textSecondary}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
 
-              {/* Info Text */}
-              <Text style={styles.infoText}>OTP will be sent to this number for verification</Text>
+          {/* Password Input */}
+          <View style={styles.inputContainer}>
+            <MaterialCommunityIcons name="lock-outline" size={20} color={COLORS.textSecondary} />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor={COLORS.textSecondary}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <MaterialCommunityIcons
+                name={showPassword ? 'eye-off' : 'eye'}
+                size={20}
+                color={COLORS.textSecondary}
+              />
+            </TouchableOpacity>
+          </View>
 
-              {/* Login Button */}
-              <TouchableOpacity
-                style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-                onPress={handleSendOtp}
-                disabled={loading}
-                activeOpacity={0.85}
-              >
-                {loading ? (
-                  <ActivityIndicator color={COLORS.white} />
-                ) : (
-                  <Text style={styles.loginButtonText}>Send OTP</Text>
-                )}
-              </TouchableOpacity>
-            </>
-          ) : (
-            <>
-              {/* OTP Input */}
-              <View style={styles.otpHeader}>
-                <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-                  <MaterialCommunityIcons name="arrow-left" size={20} color={COLORS.primary} />
-                </TouchableOpacity>
-                <Text style={styles.otpSubtitle}>Enter OTP sent to +91 {mobile}</Text>
-              </View>
-
-              <View style={styles.inputContainer}>
-                <MaterialCommunityIcons name="lock" size={20} color={COLORS.textSecondary} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter 6-digit OTP"
-                  placeholderTextColor={COLORS.textSecondary}
-                  value={otp}
-                  onChangeText={(text) => setOtp(text.replace(/[^0-9]/g, ''))}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                />
-              </View>
-
-              {/* Resend OTP */}
-              <TouchableOpacity style={styles.forgotContainer} onPress={handleResendOtp}>
-                <Text style={styles.forgotText}>Resend OTP</Text>
-              </TouchableOpacity>
-
-              {/* Verify Button */}
-              <TouchableOpacity
-                style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-                onPress={handleVerifyOtp}
-                disabled={loading}
-                activeOpacity={0.85}
-              >
-                {loading ? (
-                  <ActivityIndicator color={COLORS.white} />
-                ) : (
-                  <Text style={styles.loginButtonText}>Verify OTP</Text>
-                )}
-              </TouchableOpacity>
-            </>
-          )}
+          {/* Login Button */}
+          <TouchableOpacity
+            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+            activeOpacity={0.85}
+          >
+            {loading ? (
+              <ActivityIndicator color={COLORS.white} />
+            ) : (
+              <Text style={styles.loginButtonText}>Login</Text>
+            )}
+          </TouchableOpacity>
 
           {/* Secure Access Notice */}
           <View style={styles.secureNotice}>
@@ -240,7 +147,7 @@ export default function AdminLoginScreen() {
         <View style={styles.demoContainer}>
           <MaterialCommunityIcons name="information" size={18} color={COLORS.white} />
           <Text style={styles.demoTitle}>  Admin Access Info</Text>
-          <Text style={styles.demoText}>Only registered admin mobile numbers can access the admin panel. Contact super admin to get access.</Text>
+          <Text style={styles.demoText}>Only authorized administrators can access this panel. Contact super admin to get access.</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

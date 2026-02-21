@@ -314,6 +314,37 @@ export const checkAdminByMobile = async (mobile) => {
   }
 };
 
+// Admin login with email and password (checks Firestore adminUsers collection)
+export const adminLoginWithEmail = async (email, password) => {
+  try {
+    const q = query(
+      collection(db, COLLECTIONS.ADMIN_USERS),
+      where('email', '==', email)
+    );
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      return { success: false, message: 'No admin account found with this email.' };
+    }
+
+    const adminDoc = snapshot.docs[0];
+    const data = adminDoc.data();
+
+    if (data.isAdmin !== true) {
+      return { success: false, message: 'This account does not have admin access.' };
+    }
+
+    if (data.password !== password) {
+      return { success: false, message: 'Incorrect password. Please try again.' };
+    }
+
+    return { success: true, message: 'Login successful!', data };
+  } catch (error) {
+    console.error('Error in admin email login:', error);
+    return { success: false, message: 'Login failed. Please try again.' };
+  }
+};
+
 // Generate and store OTP in Firestore
 export const generateAndStoreOtp = async (mobile) => {
   try {
@@ -383,6 +414,31 @@ export const seedAdminUser = async (mobile, name = 'Admin') => {
     return true;
   } catch (error) {
     console.error('Error seeding admin user:', error);
+    return false;
+  }
+};
+
+// Seed default admin user with email/password (call once to set up)
+export const seedAdminWithEmail = async (email, password, name = 'Admin') => {
+  try {
+    // Use email as document ID (replace dots for Firestore key safety)
+    const docId = email.replace(/[.]/g, '_');
+    const docRef = doc(db, COLLECTIONS.ADMIN_USERS, docId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return true; // Already exists
+    }
+    await setDoc(docRef, {
+      email,
+      password,
+      name,
+      isAdmin: true,
+      createdAt: serverTimestamp(),
+    });
+    console.log(`✅ Admin user seeded with email: ${email}`);
+    return true;
+  } catch (error) {
+    console.error('Error seeding admin with email:', error);
     return false;
   }
 };

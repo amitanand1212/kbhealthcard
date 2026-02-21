@@ -22,7 +22,12 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.kbmemorial.healthcard",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -47,9 +52,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "27e49e2c-5ae6-4423-aa81-f872967fbafc"
+        "projectId": "76e656aa-8ef7-4602-a9d4-b93361b80437"
       }
     },
-    "owner": "manishmanny1212"
+    "owner": "amitanand1212"
   }
 }

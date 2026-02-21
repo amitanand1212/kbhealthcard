@@ -54,7 +54,7 @@ export default function HealthCardTab() {
             <View style={styles.dummyDetails}>
               <Text style={styles.dummyLabel}>Card No : <Text style={styles.dummyValue}>KBMH-SC-XXXXX</Text></Text>
               <Text style={styles.dummyLabel}>Name : <Text style={styles.dummyValue}>Your Name</Text></Text>
-              <Text style={styles.dummyLabel}>Age/Sex : <Text style={styles.dummyValue}>60+ / M</Text></Text>
+              <Text style={styles.dummyLabel}>Age/Sex : <Text style={styles.dummyValue}>50+ / M</Text></Text>
               <Text style={styles.dummyLabel}>Blood Gr : <Text style={styles.dummyValueRed}>O+</Text></Text>
             </View>
           </View>
@@ -70,7 +70,7 @@ export default function HealthCardTab() {
       {/* Title Section */}
       <View style={styles.titleSection}>
         <Text style={styles.heroTitle}>{healthCardBenefits?.title || 'Senior Citizen Health Card'}</Text>
-        <Text style={styles.heroSubtitle}>{healthCardBenefits?.subtitle || 'Special benefits for senior citizens aged 60+'}</Text>
+        <Text style={styles.heroSubtitle}>{healthCardBenefits?.subtitle || 'Special benefits for senior citizens aged 50+'}</Text>
       </View>
 
       {/* Benefits Section */}

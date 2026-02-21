@@ -35,7 +35,7 @@ const HealthCardInfoScreen = ({ navigation }) => {
           />
         </View>
         <Text style={styles.heroTitle}>{healthCardBenefits?.title || 'Senior Citizen Health Card'}</Text>
-        <Text style={styles.heroSubtitle}>{healthCardBenefits?.subtitle || 'Special benefits for senior citizens aged 60+'}</Text>
+        <Text style={styles.heroSubtitle}>{healthCardBenefits?.subtitle || 'Special benefits for senior citizens aged 50+'}</Text>
       </View>
 
       {/* Benefits Section */}

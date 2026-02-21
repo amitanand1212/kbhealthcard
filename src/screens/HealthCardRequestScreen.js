@@ -36,8 +36,8 @@ const HealthCardRequestScreen = ({ navigation }) => {
 
     if (!formData.age.trim()) {
       newErrors.age = 'Age is required';
-    } else if (parseInt(formData.age) < 60) {
-      newErrors.age = 'Must be 60 years or older';
+    } else if (parseInt(formData.age) < 50) {
+      newErrors.age = 'Must be 50 years or older';
     }
 
     if (!formData.address.trim()) {

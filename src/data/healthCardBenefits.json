@@ -1,6 +1,6 @@
 {
   "title": "Senior Citizen Health Card",
-  "subtitle": "Special benefits for senior citizens aged 60+",
+  "subtitle": "Special benefits for senior citizens aged 50+",
   "benefits": [
     {
       "id": "1",
@@ -34,7 +34,7 @@
     }
   ],
   "eligibility": [
-    "Age 60 years or above",
+    "Age 50 years or above",
     "Valid ID proof (Aadhaar Card)",
     "Passport size photograph",
     "Mobile number"

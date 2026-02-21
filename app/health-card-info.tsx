@@ -46,7 +46,7 @@ export default function HealthCardInfoScreen() {
       <View style={styles.heroSection}>
         <MaterialCommunityIcons name="card-account-details" size={60} color={COLORS.primary} />
         <Text style={styles.heroTitle}>{healthCardBenefits?.title || 'Senior Citizen Health Card'}</Text>
-        <Text style={styles.heroSubtitle}>{healthCardBenefits?.subtitle || 'Special benefits for senior citizens aged 60+'}</Text>
+        <Text style={styles.heroSubtitle}>{healthCardBenefits?.subtitle || 'Special benefits for senior citizens aged 50+'}</Text>
       </View>
 
       {/* Benefits Section */}
