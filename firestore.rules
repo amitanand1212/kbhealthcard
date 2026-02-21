@@ -1,0 +1,56 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Hospital Info - readable by all, writable by admins
+    match /hospitalInfo/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Doctors - readable by all, writable by admins
+    match /doctors/{doctorId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Services - readable by all, writable by admins
+    match /services/{serviceId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Health Card Benefits - readable by all, writable by admins
+    match /healthCardBenefits/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Card Requests - anyone can create, admins can read/update
+    match /cardRequests/{requestId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if true;
+    }
+
+    // Health Cards - admins can manage
+    match /healthCards/{cardId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Admin Users
+    match /adminUsers/{userId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // OTP Verifications
+    match /otpVerifications/{mobile} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

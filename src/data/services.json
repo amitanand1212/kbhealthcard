@@ -1,0 +1,46 @@
+{
+  "services": [
+    {
+      "id": "1",
+      "name": "24×7 Emergency",
+      "description": "Round the clock emergency medical services with experienced staff",
+      "icon": "hospital-box",
+      "available": "24 Hours"
+    },
+    {
+      "id": "2",
+      "name": "Pathology Lab",
+      "description": "Complete diagnostic laboratory with all modern tests",
+      "icon": "test-tube",
+      "available": "8:00 AM - 9:00 PM"
+    },
+    {
+      "id": "3",
+      "name": "Pharmacy",
+      "description": "In-house pharmacy with all essential medicines",
+      "icon": "pill",
+      "available": "24 Hours"
+    },
+    {
+      "id": "4",
+      "name": "ICU",
+      "description": "Intensive Care Unit with advanced life support systems",
+      "icon": "heart-pulse",
+      "available": "24 Hours"
+    },
+    {
+      "id": "5",
+      "name": "X-Ray & Ultrasound",
+      "description": "Digital X-Ray and advanced ultrasound imaging",
+      "icon": "radiology-box",
+      "available": "9:00 AM - 8:00 PM"
+    },
+    {
+      "id": "6",
+      "name": "Ambulance Service",
+      "description": "24x7 ambulance service for emergency patient transport",
+      "icon": "ambulance",
+      "available": "24 Hours"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "KB Memorial Hospital",
+  "tagline": "Care With Compassion",
+  "address": {
+    "line1": "KB Memorial Hospital",
+    "line2": "Baheri, Near SBI Bank",
+    "city": "Darbhanga",
+    "state": "Bihar",
+    "pincode": ""
+  },
+  "contact": {
+    "emergency": "9262706867",
+    "reception": "9262706867",
+    "whatsapp": "9262706867"
+  },
+  "location": {
+    "latitude": 25.5941,
+    "longitude": 85.1376,
+    "googleMapsUrl": "https://maps.google.com/?q=KB+Memorial+Hospital+Baheri+Darbhanga+Bihar+Near+SBI+Bank"
+  },
+  "timings": {
+    "opd": "9:00 AM - 9:00 PM",
+    "emergency": "24 x 7"
+  },
+  "socialMedia": {
+    "facebook": "",
+    "instagram": "",
+    "youtube": ""
+  }
+}

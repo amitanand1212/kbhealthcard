@@ -1,0 +1,54 @@
+{
+  "doctors": [
+    {
+      "id": "1",
+      "name": "Dr. Rajesh Kumar",
+      "degree": "MBBS, MD (Medicine)",
+      "department": "General Medicine",
+      "experience": "15 Years",
+      "opdTiming": "10:00 AM - 2:00 PM",
+      "photo": "doctor1",
+      "specialization": "Internal Medicine & Diabetes Care"
+    },
+    {
+      "id": "2",
+      "name": "Dr. Sunita Sharma",
+      "degree": "MBBS, MS (Gynecology)",
+      "department": "Gynecology & Obstetrics",
+      "experience": "12 Years",
+      "opdTiming": "11:00 AM - 3:00 PM",
+      "photo": "doctor2",
+      "specialization": "High Risk Pregnancy & Laparoscopy"
+    },
+    {
+      "id": "3",
+      "name": "Dr. Amit Singh",
+      "degree": "MBBS, MS (Orthopedics)",
+      "department": "Orthopedics",
+      "experience": "10 Years",
+      "opdTiming": "4:00 PM - 8:00 PM",
+      "photo": "doctor3",
+      "specialization": "Joint Replacement & Trauma"
+    },
+    {
+      "id": "4",
+      "name": "Dr. Priya Gupta",
+      "degree": "MBBS, DCH (Pediatrics)",
+      "department": "Pediatrics",
+      "experience": "8 Years",
+      "opdTiming": "10:00 AM - 1:00 PM",
+      "photo": "doctor4",
+      "specialization": "Child Care & Vaccination"
+    },
+    {
+      "id": "5",
+      "name": "Dr. Vikram Patel",
+      "degree": "MBBS, MD (Cardiology)",
+      "department": "Cardiology",
+      "experience": "18 Years",
+      "opdTiming": "5:00 PM - 8:00 PM",
+      "photo": "doctor5",
+      "specialization": "Heart Disease & ECG"
+    }
+  ]
+}

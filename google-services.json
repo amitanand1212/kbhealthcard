@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "800864125473",
+    "project_id": "kbhealthcard",
+    "storage_bucket": "kbhealthcard.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:800864125473:android:f69bf9fbdccd949d1f5960",
+        "android_client_info": {
+          "package_name": "com.kbhealthcard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgbdh-d-F2jQg3r9gjl_zxM8KU0u47Isk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,43 @@
+{
+  "title": "Senior Citizen Health Card",
+  "subtitle": "Special benefits for senior citizens aged 60+",
+  "benefits": [
+    {
+      "id": "1",
+      "title": "Lifetime Free Consultation",
+      "description": "Free doctor consultation for lifetime",
+      "icon": "doctor"
+    },
+    {
+      "id": "2",
+      "title": "20% Off on Medicine",
+      "description": "Get 20% discount on all medicines",
+      "icon": "pill"
+    },
+    {
+      "id": "3",
+      "title": "15% Off on Lab Tests",
+      "description": "Get 15% discount on all pathology and lab tests",
+      "icon": "flask"
+    },
+    {
+      "id": "4",
+      "title": "Priority OPD Registration",
+      "description": "Get priority in OPD queue without waiting",
+      "icon": "account-clock"
+    },
+    {
+      "id": "5",
+      "title": "Emergency Assistance",
+      "description": "Priority emergency support and ambulance service",
+      "icon": "phone-in-talk"
+    }
+  ],
+  "eligibility": [
+    "Age 60 years or above",
+    "Valid ID proof (Aadhaar Card)",
+    "Passport size photograph",
+    "Mobile number"
+  ],
+  "validity": "Lifetime"
+}
