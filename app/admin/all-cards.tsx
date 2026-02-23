@@ -17,6 +17,7 @@ import { router } from 'expo-router';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
+import { Asset } from 'expo-asset';
 import { COLORS, SIZES } from '../../src/constants';
 import { useAppStore } from '../../src/store';
 import { Alert } from '../../src/utils/alert';
@@ -75,6 +76,26 @@ export default function AllCardsScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+  const [logoBase64, setLogoBase64] = useState<string | null>(null);
+
+  // Load logo as base64 for PDF
+  useEffect(() => {
+    const loadLogo = async () => {
+      try {
+        const asset = Asset.fromModule(require('../../assets/logo.png'));
+        await asset.downloadAsync();
+        if (asset.localUri) {
+          const base64 = await FileSystem.readAsStringAsync(asset.localUri, {
+            encoding: 'base64',
+          });
+          setLogoBase64(`data:image/png;base64,${base64}`);
+        }
+      } catch (error) {
+        console.error('Error loading logo:', error);
+      }
+    };
+    loadLogo();
+  }, []);
 
   // Initial load
   useEffect(() => {
@@ -122,6 +143,9 @@ export default function AllCardsScreen() {
 
   const generateHtmlForCard = (card: any) => {
     const emergencyNumber = hospitalInfo?.contact?.emergency || '9262706867';
+    const logoHtml = logoBase64 
+      ? `<img src="${logoBase64}" style="width: 50px; height: 50px; object-fit: contain;" alt="Logo" />`
+      : `<span class="logo-text">KB</span>`;
     return `
       <!DOCTYPE html>
       <html>
@@ -132,7 +156,7 @@ export default function AllCardsScreen() {
           body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
           .card { width: 100%; max-width: 450px; margin: 0 auto; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
           .header { background: linear-gradient(135deg, #1E88E5, #1565C0); padding: 16px; display: flex; align-items: center; }
-          .logo-circle { width: 70px; height: 70px; border-radius: 50%; background: white; border: 3px solid #FFD700; display: flex; align-items: center; justify-content: center; margin-right: 12px; }
+          .logo-circle { width: 70px; height: 70px; border-radius: 50%; background: white; border: 3px solid #FFD700; display: flex; align-items: center; justify-content: center; margin-right: 12px; overflow: hidden; }
           .logo-text { font-size: 24px; font-weight: bold; color: #1E88E5; }
           .header-text { color: white; flex: 1; }
           .hospital-name { font-size: 18px; font-weight: bold; }
@@ -157,7 +181,7 @@ export default function AllCardsScreen() {
       <body>
         <div class="card">
           <div class="header">
-            <div class="logo-circle"><span class="logo-text">KB</span></div>
+            <div class="logo-circle">${logoHtml}</div>
             <div class="header-text">
               <div class="hospital-name">KB MEMORIAL HOSPITAL</div>
               <div class="hospital-address">Baheri, Darbhanga, Bihar</div>

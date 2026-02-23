@@ -342,8 +342,20 @@ export default function AdminCreateCardScreen() {
             </View>
 
             {/* Create Card Button */}
-            <TouchableOpacity style={styles.createButton} onPress={handleSave} activeOpacity={0.85}>
-              <Text style={styles.createButtonText}>Create Card</Text>
+            <TouchableOpacity 
+              style={[styles.createButton, isCreating && styles.createButtonDisabled]} 
+              onPress={handleSave} 
+              activeOpacity={0.85}
+              disabled={isCreating}
+            >
+              {isCreating ? (
+                <View style={styles.createButtonLoading}>
+                  <ActivityIndicator size="small" color={COLORS.white} />
+                  <Text style={styles.createButtonText}>Creating...</Text>
+                </View>
+              ) : (
+                <Text style={styles.createButtonText}>Create Card</Text>
+              )}
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -634,6 +646,15 @@ const styles = StyleSheet.create({
     fontSize: SIZES.h4,
     fontWeight: 'bold',
     color: COLORS.white,
+  },
+  createButtonDisabled: {
+    backgroundColor: COLORS.textSecondary,
+    opacity: 0.7,
+  },
+  createButtonLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   bottomNav: {
     flexDirection: 'row',
